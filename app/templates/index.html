@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Apartment Hunter — Estimation IA</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #edf3fa;
+            color: #172d4e;
+        }
+
+        header {
+            background: #174185;
+            color: white;
+            padding: 35px 20px;
+            text-align: center;
+        }
+
+        main {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 0 15px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-radius: 14px;
+        }
+
+        h2 { color: #174185; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #cad5e4;
+            border-radius: 8px;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: #2563eb;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .resultat {
+            text-align: center;
+            background: #e2f8e9;
+        }
+
+        .prix {
+            font-size: 34px;
+            color: #166534;
+            font-weight: bold;
+        }
+
+        .erreur {
+            color: #b91c1c;
+            background: #fee2e2;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        @media(max-width: 600px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>🏠 Apartment Hunter</h1>
+    <p>Estimation immobilière par intelligence artificielle</p>
+    <p>Modèle Random Forest — King County</p>
+</header>
+
+<main>
+
+<form method="POST">
+
+    <section class="card">
+        <h2>1. Caractéristiques du logement</h2>
+
+        <div class="grid">
+
+            <div>
+                <label>Surface habitable (sqft)</label>
+                <input type="number" name="sqft_living"
+                       min="1" step="1" required
+                       value="{{ donnees.get('sqft_living', '1680') }}">
+            </div>
+
+            <div>
+                <label>Surface du terrain (sqft)</label>
+                <input type="number" name="sqft_lot"
+                       min="1" step="1" required
+                       value="{{ donnees.get('sqft_lot', '8080') }}">
+            </div>
+
+            <div>
+                <label>Nombre de chambres</label>
+                <input type="number" name="bedrooms"
+                       min="0" max="19" step="1" required
+                       value="{{ donnees.get('bedrooms', '3') }}">
+            </div>
+
+            <div>
+                <label>Nombre de salles de bain</label>
+                <input type="number" name="bathrooms"
+                       min="0" max="10" step="0.25" required
+                       value="{{ donnees.get('bathrooms', '2') }}">
+            </div>
+
+            <div>
+                <label>Nombre d'étages</label>
+                <input type="number" name="floors"
+                       min="1" max="4" step="0.5" required
+                       value="{{ donnees.get('floors', '1') }}">
+            </div>
+
+            <div>
+                <label>Qualité de construction (1 à 13)</label>
+                <input type="number" name="grade"
+                       min="1" max="13" step="1" required
+                       value="{{ donnees.get('grade', '8') }}">
+            </div>
+
+            <div>
+                <label>État du logement (1 à 5)</label>
+                <input type="number" name="condition"
+                       min="1" max="5" step="1" required
+                       value="{{ donnees.get('condition', '3') }}">
+            </div>
+
+            <div>
+                <label>Qualité de la vue (0 à 4)</label>
+                <select name="view">
+                    {% for n in range(5) %}
+                    <option value="{{ n }}"
+                      {% if donnees.get('view', '0')|string == n|string %}
+                      selected
+                      {% endif %}>
+                        {{ n }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label>Année de construction</label>
+                <input type="number" name="yr_built"
+                       min="1900" max="2015" step="1" required
+                       value="{{ donnees.get('yr_built', '1986') }}">
+            </div>
+
+            <div>
+                <label>Année de référence</label>
+                <select name="sale_year">
+                    <option value="2014"
+                      {% if donnees.get('sale_year', '2014') == '2014' %}
+                      selected{% endif %}>2014</option>
+                    <option value="2015"
+                      {% if donnees.get('sale_year') == '2015' %}
+                      selected{% endif %}>2015</option>
+                </select>
+            </div>
+
+            {% for nom, libelle in [
+                ('waterfront', "Bord de l'eau"),
+                ('renovated', 'Logement rénové'),
+                ('has_basement', 'Présence de sous-sol')
+            ] %}
+            <div>
+                <label>{{ libelle }}</label>
+                <select name="{{ nom }}">
+                    <option value="0"
+                      {% if donnees.get(nom, '0') == '0' %}selected{% endif %}>
+                        Non
+                    </option>
+                    <option value="1"
+                      {% if donnees.get(nom, '0') == '1' %}selected{% endif %}>
+                        Oui
+                    </option>
+                </select>
+            </div>
+            {% endfor %}
+
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>2. Localisation</h2>
+
+        <div class="grid">
+
+            <div>
+                <label>Latitude</label>
+                <input type="number" name="lat"
+                       step="any" min="47.1" max="47.9" required
+                       value="{{ donnees.get('lat', '47.6168') }}">
+            </div>
+
+            <div>
+                <label>Longitude</label>
+                <input type="number" name="long"
+                       step="any" min="-122.6" max="-121.3" required
+                       value="{{ donnees.get('long', '-122.045') }}">
+            </div>
+
+        </div>
+    </section>
+
+    <button type="submit">Estimer le prix immobilier</button>
+
+</form>
+
+{% if erreur %}
+    <div class="erreur">{{ erreur }}</div>
+{% endif %}
+
+{% if prix_estime is not none %}
+    <section class="card resultat">
+        <h2>Prix estimé par notre IA</h2>
+        <p class="prix">
+            {{ "{:,.2f}".format(prix_estime) }} $
+        </p>
+        <p>Estimation indicative fondée sur des données historiques.</p>
+    </section>
+{% endif %}
+
+</main>
+</body>
+</html>

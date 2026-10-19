@@ -1,0 +1,25 @@
+{
+    "model_name": "RandomForestRegressor",
+    "features": [
+        "sqft_living",
+        "bedrooms",
+        "bathrooms",
+        "grade",
+        "condition",
+        "sqft_lot",
+        "floors",
+        "waterfront",
+        "view",
+        "house_age",
+        "renovated",
+        "has_basement",
+        "lat",
+        "long"
+    ],
+    "target": "price",
+    "currency": "USD",
+    "mae_test": 70510.41058548808,
+    "rmse_test": 126780.75451745902,
+    "r2_test": 0.8841642787964261,
+    "trained_at": "2026-10-17T17:48:55.846238+00:00"
+}
